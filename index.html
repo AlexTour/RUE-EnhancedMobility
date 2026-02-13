@@ -86,6 +86,21 @@
             background-color: white;
             color: #0c634f;
         }
+        .city-display {
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .city-display img {
+            max-width: 400px;
+            height: auto;
+            border: 1px solid #0c634f;
+            border-radius: 4px;
+        }
+        .city-display .city-name {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
         .content {
             display: none;
             margin-top: 20px;
@@ -93,11 +108,21 @@
         .simulation-image {
             text-align: center;
             margin-bottom: 20px;
+            position: relative;
         }
         .simulation-image img {
             max-width: 100%;
             border: 1px solid #0c634f;
             border-radius: 4px;
+        }
+        .simulation-image .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2em;
+            text-shadow: 2px 2px 4px black;
         }
         .kpi-table {
             width: 50%;
@@ -153,34 +178,24 @@
                 <label>City:</label>
                 <div class="custom-select" id="city-select">
                     <div class="select-selected">Select City</div>
-                    <div class="select-items select-hide">
-                        <div data-value="trikala">
-                            <img src="trikala.jpg" alt="Trikala">
-                            Trikala
-                        </div>
-                        <div data-value="lemgo">
-                            <img src="lemgo.jpg" alt="lemgo">
-                            Lemgo
-                        </div>
-                    </div>
+                    <div class="select-items select-hide"></div>
                 </div>
             </div>
             <div>
                 <label>Scenario ID / Name:</label>
-                <select id="scenario-select">
-                    <option value="">Select Scenario</option>
-                    <option value="baseline">Baseline</option>
-                    <option value="enhanced">Enhanced</option>
-                    <option value="scenario1">Scenario 1</option>
-                    <option value="scenario2">Scenario 2</option>
-                </select>
+                <select id="scenario-select"></select>
             </div>
+        </div>
+        <div class="city-display" id="city-display">
+            <img id="city-image" src="" alt="">
+            <div class="city-name" id="city-name"></div>
         </div>
         <div class="content" id="content">
             <div class="simulation-image">
                 <img src="https://example.com/simulation-image.jpg" alt="Simulation Image" id="sim-image">
+                <div class="overlay">Simulation Image</div>
             </div>
-            <table class="kpi-table">
+            <table class="kpi-table" id="kpi-table">
                 <thead>
                     <tr>
                         <th>KPI Metrics</th>
@@ -190,61 +205,12 @@
                         <th>Δ %</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Delay Time</td>
-                        <td>sec/km</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="negative">-7%</td>
-                    </tr>
-                    <tr>
-                        <td>Flow (All)</td>
-                        <td>veh/h</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="negative">-17%</td>
-                    </tr>
-                    <tr>
-                        <td>Harmonic Speed</td>
-                        <td>veh/h</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="positive">+1%</td>
-                    </tr>
-                    <tr>
-                        <td>Total Distance Travelled (All)</td>
-                        <td>km/h</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="negative">-16%</td>
-                    </tr>
-                    <tr>
-                        <td>Total Distance Travelled (Bus)</td>
-                        <td>km</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="positive">+96%</td>
-                    </tr>
-                    <tr>
-                        <td>CO₂ Emissions</td>
-                        <td>g/km</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="negative">-14%</td>
-                    </tr>
-                    <tr>
-                        <td>NOₓ Emissions</td>
-                        <td>g/km</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="negative">-10%</td>
-                    </tr>
+                <tbody id="kpi-tbody">
+                    <!-- Dynamically populated -->
                 </tbody>
             </table>
             <div class="simulation-video">
                 <h3>Simulation Video</h3>
-                <!-- Placeholder for video; can be replaced with <video> tag -->
                 <div id="sim-video" style="background-color: #eee; height: 200px; display: flex; align-items: center; justify-content: center;">
                     Video Placeholder
                 </div>
@@ -257,20 +223,86 @@
         </div>
     </div>
     <script>
+        // Data structure for easy addition of new cities, scenarios, and simulation data
+        const appData = {
+            cities: [
+                {
+                    value: "trikala",
+                    name: "Trikala",
+                    image: "trikala.jpg"
+                },
+                {
+                    value: "lemgo",
+                    name: "Lemgo",
+                    image: "lemgo.jpg"
+                }
+                // Add more cities here, e.g., { value: "newcity", name: "New City", image: "newcity.jpg" }
+            ],
+            scenarios: [
+                { value: "", name: "Select Scenario" },
+                { value: "baseline", name: "Baseline" },
+                { value: "enhanced", name: "Enhanced" },
+                { value: "scenario1", name: "Scenario 1" },
+                { value: "scenario2", name: "Scenario 2" }
+                // Add more scenarios here
+            ],
+            // Simulation data per city and scenario
+            // Example structure; expand as needed
+            simulations: {
+                trikala: {
+                    baseline: {
+                        simImage: "https://example.com/trikala-baseline-sim.jpg",
+                        video: null, // Set to URL like "https://example.com/trikala-baseline.mp4" when available
+                        kpis: [
+                            { metric: "Delay Time", unit: "sec/km", baseline: "-", enhanced: "-", delta: "-7%", deltaClass: "negative" },
+                            { metric: "Flow (All)", unit: "veh/h", baseline: "-", enhanced: "-", delta: "-17%", deltaClass: "negative" },
+                            { metric: "Harmonic Speed", unit: "veh/h", baseline: "-", enhanced: "-", delta: "+1%", deltaClass: "positive" },
+                            { metric: "Total Distance Travelled (All)", unit: "km/h", baseline: "-", enhanced: "-", delta: "-16%", deltaClass: "negative" },
+                            { metric: "Total Distance Travelled (Bus)", unit: "km", baseline: "-", enhanced: "-", delta: "+96%", deltaClass: "positive" },
+                            { metric: "CO₂ Emissions", unit: "g/km", baseline: "-", enhanced: "-", delta: "-14%", deltaClass: "negative" },
+                            { metric: "NOₓ Emissions", unit: "g/km", baseline: "-", enhanced: "-", delta: "-10%", deltaClass: "negative" }
+                        ]
+                    },
+                    // Add other scenarios for trikala, e.g., enhanced: { ... }
+                },
+                lemgo: {
+                    baseline: {
+                        simImage: "https://example.com/lemgo-baseline-sim.jpg",
+                        video: null,
+                        kpis: [
+                            // Same or different KPIs
+                            { metric: "Delay Time", unit: "sec/km", baseline: "-", enhanced: "-", delta: "-7%", deltaClass: "negative" },
+                            // etc.
+                        ]
+                    },
+                    // Add others
+                }
+                // Add for new cities
+            }
+        };
+
         // Custom select for city
         const customSelect = document.querySelector(".custom-select");
         const selectSelected = customSelect.querySelector(".select-selected");
         const selectItems = customSelect.querySelector(".select-items");
+
+        // Populate city dropdown
+        let cityOptionsHtml = '';
+        appData.cities.forEach(city => {
+            cityOptionsHtml += `<div data-value="${city.value}"><img src="${city.image}" alt="${city.name}"> ${city.name}</div>`;
+        });
+        selectItems.innerHTML = cityOptionsHtml;
 
         selectSelected.addEventListener("click", function() {
             selectItems.classList.toggle("select-hide");
             this.classList.toggle("select-arrow-active");
         });
 
+        // Add event listeners to options
         const options = selectItems.querySelectorAll("div");
         options.forEach(option => {
             option.addEventListener("click", function() {
-                selectSelected.innerHTML = this.innerHTML;
+                selectSelected.innerText = this.innerText; // Only text, not image
                 selectSelected.setAttribute("data-value", this.getAttribute("data-value"));
                 selectItems.classList.add("select-hide");
                 checkSelection();
@@ -284,22 +316,82 @@
             }
         });
 
-        // Scenario select
+        // Populate scenario select
         const scenarioSelect = document.getElementById("scenario-select");
+        appData.scenarios.forEach(scenario => {
+            const opt = document.createElement("option");
+            opt.value = scenario.value;
+            opt.text = scenario.name;
+            scenarioSelect.add(opt);
+        });
         scenarioSelect.addEventListener("change", checkSelection);
 
         function checkSelection() {
-            const city = selectSelected.getAttribute("data-value");
-            const scenario = scenarioSelect.value;
-            if (city && scenario) {
-                document.getElementById("content").style.display = "block";
-                // Here you can dynamically update image, video, table based on city and scenario
-                // For example:
-                // document.getElementById("sim-image").src = `images/${city}-${scenario}.jpg`;
-                // For video: replace the placeholder with <video src=`videos/${city}-${scenario}.mp4` controls></video>
-                // Update table data via JS if needed
+            const cityValue = selectSelected.getAttribute("data-value");
+            const scenarioValue = scenarioSelect.value;
+
+            // Update city display
+            const selectedCity = appData.cities.find(c => c.value === cityValue);
+            const cityDisplay = document.getElementById("city-display");
+            if (selectedCity) {
+                document.getElementById("city-image").src = selectedCity.image;
+                document.getElementById("city-image").alt = selectedCity.name;
+                document.getElementById("city-name").innerText = selectedCity.name;
+                cityDisplay.style.display = "block";
             } else {
-                document.getElementById("content").style.display = "none";
+                cityDisplay.style.display = "none";
+            }
+
+            // Update content if both selected and scenario not empty
+            const content = document.getElementById("content");
+            if (cityValue && scenarioValue) {
+                content.style.display = "block";
+
+                // Get simulation data (fallback to default if not defined)
+                const simData = appData.simulations[cityValue]?.[scenarioValue] || {
+                    simImage: `https://example.com/${cityValue}-${scenarioValue}-sim.jpg`,
+                    video: null,
+                    kpis: [
+                        { metric: "Delay Time", unit: "sec/km", baseline: "-", enhanced: "-", delta: "-7%", deltaClass: "negative" },
+                        { metric: "Flow (All)", unit: "veh/h", baseline: "-", enhanced: "-", delta: "-17%", deltaClass: "negative" },
+                        { metric: "Harmonic Speed", unit: "veh/h", baseline: "-", enhanced: "-", delta: "+1%", deltaClass: "positive" },
+                        { metric: "Total Distance Travelled (All)", unit: "km/h", baseline: "-", enhanced: "-", delta: "-16%", deltaClass: "negative" },
+                        { metric: "Total Distance Travelled (Bus)", unit: "km", baseline: "-", enhanced: "-", delta: "+96%", deltaClass: "positive" },
+                        { metric: "CO₂ Emissions", unit: "g/km", baseline: "-", enhanced: "-", delta: "-14%", deltaClass: "negative" },
+                        { metric: "NOₓ Emissions", unit: "g/km", baseline: "-", enhanced: "-", delta: "-10%", deltaClass: "negative" }
+                    ]
+                };
+
+                // Update simulation image
+                document.getElementById("sim-image").src = simData.simImage;
+
+                // Update table
+                let tbodyHtml = '';
+                simData.kpis.forEach(kpi => {
+                    tbodyHtml += `
+                        <tr>
+                            <td>${kpi.metric}</td>
+                            <td>${kpi.unit}</td>
+                            <td>${kpi.baseline}</td>
+                            <td>${kpi.enhanced}</td>
+                            <td class="${kpi.deltaClass}">${kpi.delta}</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById("kpi-tbody").innerHTML = tbodyHtml;
+
+                // Update video
+                const videoContainer = document.getElementById("sim-video");
+                if (simData.video) {
+                    videoContainer.innerHTML = `<video src="${simData.video}" controls></video>`;
+                } else {
+                    videoContainer.innerHTML = '<div style="background-color: #eee; height: 200px; display: flex; align-items: center; justify-content: center;">Video Placeholder</div>';
+                }
+
+                // Update links if needed
+
+            } else {
+                content.style.display = "none";
             }
         }
     </script>
