@@ -105,9 +105,13 @@
             display: none;
             margin-top: 20px;
         }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
         .simulation-image {
             text-align: center;
-            margin-bottom: 20px;
             position: relative;
         }
         .simulation-image img {
@@ -125,10 +129,8 @@
             text-shadow: 2px 2px 4px black;
         }
         .kpi-table {
-            width: 50%;
+            width: 100%;
             border-collapse: collapse;
-            margin-right: 20px;
-            float: left;
         }
         .kpi-table th, .kpi-table td {
             border: 1px solid #0c634f;
@@ -140,8 +142,7 @@
             color: white;
         }
         .simulation-video {
-            float: left;
-            width: 45%;
+            width: 100%;
         }
         .simulation-video video {
             max-width: 100%;
@@ -153,9 +154,6 @@
         }
         .negative {
             color: red;
-        }
-        .clear {
-            clear: both;
         }
         .links {
             margin-top: 10px;
@@ -191,35 +189,40 @@
             <div class="city-name" id="city-name"></div>
         </div>
         <div class="content" id="content">
-            <div class="simulation-image">
-                <img src="https://example.com/simulation-image.jpg" alt="Simulation Image" id="sim-image">
-                <div class="overlay">Simulation Image</div>
-            </div>
-            <table class="kpi-table" id="kpi-table">
-                <thead>
-                    <tr>
-                        <th>KPI Metrics</th>
-                        <th>Unit</th>
-                        <th>Baseline</th>
-                        <th>Enhanced</th>
-                        <th>Δ %</th>
-                    </tr>
-                </thead>
-                <tbody id="kpi-tbody">
-                    <!-- Dynamically populated -->
-                </tbody>
-            </table>
-            <div class="simulation-video">
-                <h3>Simulation Video</h3>
-                <div id="sim-video" style="background-color: #eee; height: 200px; display: flex; align-items: center; justify-content: center;">
-                    Video Placeholder
+            <div class="grid-container">
+                <div class="left-column">
+                    <div class="simulation-image">
+                        <img src="https://example.com/simulation-image.jpg" alt="Simulation Image" id="sim-image">
+                        <div class="overlay">Simulation Image</div>
+                    </div>
                 </div>
-                <div class="links">
-                    <a href="#">■ Embedded Simulation Video</a>
-                    <a href="#">■ Clickable Snapshot with Link to Video</a>
+                <div class="right-column">
+                    <table class="kpi-table" id="kpi-table">
+                        <thead>
+                            <tr>
+                                <th>KPI Metrics</th>
+                                <th>Unit</th>
+                                <th>Baseline</th>
+                                <th>Enhanced</th>
+                                <th>Δ %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kpi-tbody">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                    <div class="simulation-video">
+                        <h3>Simulation Video</h3>
+                        <div id="sim-video" style="background-color: #eee; height: 200px; display: flex; align-items: center; justify-content: center;">
+                            Video Placeholder
+                        </div>
+                        <div class="links">
+                            <a href="#">■ Embedded Simulation Video</a>
+                            <a href="#">■ Clickable Snapshot with Link to Video</a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="clear"></div>
         </div>
     </div>
     <script>
@@ -330,10 +333,10 @@
             const cityValue = selectSelected.getAttribute("data-value");
             const scenarioValue = scenarioSelect.value;
 
-            // Update city display
+            // Update city display only if city selected and no scenario selected
             const selectedCity = appData.cities.find(c => c.value === cityValue);
             const cityDisplay = document.getElementById("city-display");
-            if (selectedCity) {
+            if (selectedCity && !scenarioValue) {
                 document.getElementById("city-image").src = selectedCity.image;
                 document.getElementById("city-image").alt = selectedCity.name;
                 document.getElementById("city-name").innerText = selectedCity.name;
